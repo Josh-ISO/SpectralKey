@@ -15,4 +15,4 @@ Alternatively, from this repository folder:
 python "SpectralKey/Prototypes/prototype 1/signal_observatory.py"
 ```
 
-Use **Load demo observations** to explore sample signals, or **+ Log signal** to add observations. This prototype logs and reviews HF signals; it does not connect to SDR hardware. Observations and recordings stay local and are excluded from Git.
+This is a static preview of the SpectralKey interface. Python only serves the HTML, CSS, logo, and font. Logging controls are disabled; there is no database, audio processing, or signal analysis backend. Existing local observation files are not deleted.
