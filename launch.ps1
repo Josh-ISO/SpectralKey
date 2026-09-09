@@ -16,5 +16,7 @@ if (-not $runtime) {
     throw 'Python 3.10 or newer is required. Install Python, then launch SpectralKey again.'
 }
 Write-Host 'Open http://127.0.0.1:8765 in your browser. Press Ctrl+C here to stop SpectralKey.'
+$url = "http://127.0.0.1:8765"
+Start-Process -FilePath "chrome.exe" -ArgumentList $url
 & $runtime $prototype
 exit $LASTEXITCODE

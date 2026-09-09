@@ -1,9 +1,11 @@
 """Serve the SpectralKey page locally. Run: python signal_observatory.py"""
+import webbrowser
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
-
+url = 'http://127.0.0.1:8765'
+chrome_path = 'C:/Program Files/Google/Chrome/Application/chrome.exe %s'
 ROOT = Path(__file__).resolve().parent
 FILES = {
     "/": ("signal_observatory.html", "text/html; charset=utf-8"),
@@ -38,7 +40,9 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     with ThreadingHTTPServer(("127.0.0.1", 8765), Handler) as server:
         print("SpectralKey running at http://127.0.0.1:8765", flush=True)
+        
         try:
             server.serve_forever()
+            webbrowser.get(chrome_path).open(url)
         except KeyboardInterrupt:
             print("\nStopped.")
