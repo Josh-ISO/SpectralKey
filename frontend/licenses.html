@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Licenses &amp; credits — SpectralKey</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header><h1>Licenses &amp; credits</h1><a class="btn" href="/">Back to receiver</a></header>
+<main class="licenses-page">
+  <p>Third-party software and assets used by SpectralKey. These notices describe the included components; they do not set a license for SpectralKey itself.</p>
+  <section class="panel license-card" aria-labelledby="waterfall-license">
+    <h2 id="waterfall-license">Waterfall renderer</h2>
+    <p><a href="https://github.com/jledet/waterfall">jledet/waterfall</a> by Jeppe Ledet-Pedersen provides the spectrum and waterfall canvas renderer and colormaps. The vendored files use the MIT license.</p>
+    <details open><summary>Full MIT license</summary><pre class="license-text">MIT License
+
+Copyright (c) 2019 Jeppe Ledet-Pedersen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &quot;Software&quot;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</pre></details>
+  </section>
+  <section class="panel license-card" aria-labelledby="backend-licenses">
+    <h2 id="backend-licenses">Python backend and dependencies</h2>
+    <p>aiohttp provides HTTPS and WebSocket connections; cryptography generates the local development certificate. This list includes their installed dependencies and bundled notices.</p>
+    <div class="table-wrap"><table><thead><tr><th>Component</th><th>License</th><th>Included notices</th></tr></thead><tbody><tr><th scope="row">aiohappyeyeballs <span class="small">2.7.1</span></th><td>PSF-2.0</td><td><a href="licenses/aiohappyeyeballs-LICENSE.txt">aiohappyeyeballs-LICENSE.txt</a></td></tr><tr><th scope="row">aiohttp <span class="small">3.14.3</span></th><td>Apache-2.0 AND MIT</td><td><a href="licenses/aiohttp-LICENSE.txt.txt">aiohttp-LICENSE.txt.txt</a><br><a href="licenses/aiohttp-vendor-llhttp-LICENSE.txt">aiohttp-vendor-llhttp-LICENSE.txt</a></td></tr><tr><th scope="row">aiosignal <span class="small">1.4.0</span></th><td>Apache 2.0</td><td><a href="licenses/aiosignal-LICENSE.txt">aiosignal-LICENSE.txt</a></td></tr><tr><th scope="row">attrs <span class="small">26.1.0</span></th><td>MIT</td><td><a href="licenses/attrs-LICENSE.txt">attrs-LICENSE.txt</a></td></tr><tr><th scope="row">cffi <span class="small">2.1.1</span></th><td>MIT-0</td><td><a href="licenses/cffi-LICENSE.txt">cffi-LICENSE.txt</a></td></tr><tr><th scope="row">cryptography <span class="small">49.0.0</span></th><td>Apache-2.0 OR BSD-3-Clause</td><td><a href="licenses/cryptography-LICENSE.txt">cryptography-LICENSE.txt</a><br><a href="licenses/cryptography-LICENSE.APACHE.txt">cryptography-LICENSE.APACHE.txt</a><br><a href="licenses/cryptography-LICENSE.BSD.txt">cryptography-LICENSE.BSD.txt</a></td></tr><tr><th scope="row">frozenlist <span class="small">1.8.0</span></th><td>Apache-2.0</td><td><a href="licenses/frozenlist-LICENSE.txt">frozenlist-LICENSE.txt</a></td></tr><tr><th scope="row">idna <span class="small">3.19</span></th><td>BSD-3-Clause</td><td><a href="licenses/idna-LICENSE.md.txt">idna-LICENSE.md.txt</a></td></tr><tr><th scope="row">multidict <span class="small">6.8.0</span></th><td>Apache License 2.0</td><td><a href="licenses/multidict-LICENSE.txt">multidict-LICENSE.txt</a></td></tr><tr><th scope="row">propcache <span class="small">0.5.2</span></th><td>Apache-2.0</td><td><a href="licenses/propcache-LICENSE.txt">propcache-LICENSE.txt</a><br><a href="licenses/propcache-NOTICE.txt">propcache-NOTICE.txt</a></td></tr><tr><th scope="row">pycparser <span class="small">3.0</span></th><td>BSD-3-Clause</td><td><a href="licenses/pycparser-LICENSE.txt">pycparser-LICENSE.txt</a></td></tr><tr><th scope="row">typing_extensions <span class="small">4.16.0</span></th><td>PSF-2.0</td><td><a href="licenses/typing_extensions-LICENSE.txt">typing_extensions-LICENSE.txt</a></td></tr><tr><th scope="row">yarl <span class="small">1.24.5</span></th><td>Apache-2.0</td><td><a href="licenses/yarl-LICENSE.txt">yarl-LICENSE.txt</a><br><a href="licenses/yarl-NOTICE.txt">yarl-NOTICE.txt</a></td></tr></tbody></table></div>
+    <p>Python runtime: <a href="licenses/python-LICENSE.txt">python-LICENSE.txt</a></p>
+  </section>
+  <section class="panel license-card" aria-labelledby="asset-credits">
+    <h2 id="asset-credits">Fonts and artwork</h2>
+    <ul>
+      <li><strong>Unitblock:</strong> the supplied font identifies its license as <a href="https://creativecommons.org/publicdomain/zero/1.0/">Creative Commons Zero v1.0 Universal</a>.</li>
+      <li><strong>Rem-Blick:</strong> the supplied font contains “Copyright (c) Richard Polt 2005. Created by www.fontifier.com.” No separate license grant was supplied with this font.</li>
+      <li><strong>SpectralKey logo and icon:</strong> project artwork supplied by the project owner.</li>
+    </ul>
+  </section>
+  <section class="panel license-card" aria-labelledby="protocol-credits">
+    <h2 id="protocol-credits">Protocol reference and browser APIs</h2>
+    <p><a href="https://github.com/jks-prv/kiwiclient">KiwiSDR kiwiclient</a> was used as a receiver protocol reference. The bridge uses WebSockets and the browser’s built-in Web Audio and Canvas APIs.</p>
+  </section>
+</main>
+<footer class="site-footer"><a href="/">Receiver</a><a href="licenses.html" aria-current="page">Licenses &amp; credits</a></footer>
+</body>
+</html>

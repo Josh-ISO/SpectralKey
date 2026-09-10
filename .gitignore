@@ -3,3 +3,8 @@ __pycache__/
 signals.db
 signals.db-*
 recordings/
+.venv/
+.tls/
+
+data/
+.vs/

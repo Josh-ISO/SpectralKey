@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SpectralKey</title>
+</head>
+<body>
+<header><div><h1 class="brand"><img src="assets/images/spectralkey-logo.png" alt="" width="68" height="68"><span>Spectral Key</span></h1></div></header>
+<main>
+  <section class="panel receiver-panel" aria-labelledby="receiver-heading">
+    <div class="panel-title"><h2 id="receiver-heading">Live SDR waterfall</h2><span><b id="receiver-frames">0</b> frames</span></div>
+    <form id="receiver-controls" class="receiver-controls">
+      <label>Tune (kHz)<input id="receiver-frequency" type="number" min="0" max="32000" step="0.001" value="7100" required></label>
+      <label>Zoom<select id="receiver-zoom"><option value="0">Full band</option><option value="3">3.75 MHz</option><option value="5" selected>937.5 kHz</option><option value="7">234.4 kHz</option><option value="9">58.6 kHz</option><option value="11">14.6 kHz</option></select></label>
+      <label>Mode<select id="receiver-mode"><option value="usb">USB</option><option value="lsb">LSB</option><option value="am">AM</option><option value="cw">CW</option></select></label>
+      <button class="btn primary" id="connect-receiver" type="submit">Connect</button>
+      <button class="btn" id="disconnect-receiver" type="button" disabled>Disconnect</button>
+      <button class="btn" id="apply-tuning" type="button">Apply tuning</button>
+      <button class="btn" id="waterfall-color" type="button">Colors</button>
+    </form>
+    <p id="receiver-status" class="receiver-status" role="status">Ready. Click Connect to receive live data.</p>
+    <canvas id="waterfall" aria-label="Live radio spectrum and waterfall">Your browser must support HTML Canvas to display the waterfall.</canvas>
+    <div class="receiver-controls"><button class="btn" type="button" id="audio-toggle">Enable audio</button><label>Volume<input id="audio-volume" type="range" min="0" max="1" step="0.01" value="0.5"></label></div>
+  </section>
+
+  <section class="stats"><div class="stat"><b id="total">0</b><span>events captured</span></div></section>
+  <div class="toolbar">
+    <button class="btn primary" id="add" disabled title="Unavailable in the static preview">+ Log signal</button>
+    <button class="btn" id="refresh" disabled title="Unavailable in the static preview">Refresh</button>
+  </div>
+  <div class="layout">
+    <section class="panel"><div class="panel-title"><h2>Observation timeline</h2><div class="filters">
+      <!--<select id="filter" disabled title="Unavailable in the static preview" aria-label="Filter by classification"></select> -->
+    </div></div><div class="table-wrap"><table><thead><tr><th>Frequency</th><th>UTC / receiver</th><th>Mode & evidence</th><th>Assessment</th></tr></thead>
+      <tbody id="events"></tbody></table><div class="empty" id="empty">Static preview. Signal logging is not connected.</div></div></section>
+    
+  </div>
+</main>
+<footer class="site-footer"><a href="licenses.html">Licenses &amp; credits</a></footer>
+<script src="vendor/waterfall/colormap.js"></script>
+<script src="vendor/waterfall/spectrum.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/receiver.js"></script>
+</body></html>
