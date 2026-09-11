@@ -21,15 +21,21 @@ Double-click **Launch SpectralKey.cmd** to open **https://localhost:8765** autom
 
 ## Receiver and audio
 
-Click **Connect**, then **Enable audio** to start sound with a browser user gesture. Choose AM, USB, LSB, or CW and a frequency in kHz, then click **Apply tuning**. Volume and mute affect browser playback. **Colors** cycles the waterfall palette. Disconnect cancels retries, releases the receiver session, and clears queued audio.
+The audio oscilloscope shows the received mono audio waveform over time. Choose **Green**, **Red**, **Gold**, **White**, **Blue**, **Purple**, or animated **Rainbow RGB** from **Trace color**. The screen stays black with a subtle neutral grid; colors affect only the trace and its glow. The oscilloscope starts with **Start scan** and works while sound is muted. Volume does not change trace amplitude. The MIT-licensed [mathiasvr/audio-oscilloscope](https://github.com/mathiasvr/audio-oscilloscope) renderer is included locally. The display measures normalized audio amplitude, not RF voltage.
 
-The browser connects only to `wss://<SpectralKey host>/ws/receiver`. Python maintains paired sound and waterfall connections to the configured receiver. Only FFT frames, mono PCM frames, and selected numeric metadata reach the browser; receiver addresses and raw Kiwi configuration messages are not served. This hides the upstream address from the page and browser connections, not from someone with access to the server's source or environment.
+Click **Start scan** to continuously sweep the remote KiwiSDR's reported frequency range. The server automatically measures eight adjacent windows at zoom 3, verifies each returned frame's position, discards one settling frame, and averages two measured frames in linear power. Four native bins are combined per output bin, producing 2,048 bins per full-band pass. The sweep counter advances after all eight windows have been measured; scan time depends on the remote receiver and network. The status line shows the current window, audio center frequency, and covered range.
 
-Reconnect delays grow exponentially from 1 second to a maximum of 30 seconds, with jitter. Ten seconds of healthy waterfall traffic resets the backoff. Busy, interrupted, and stalled sessions retry; receiver access refusals and session limits stop retries. The bridge supports one active browser session at a time. Web Audio resamples the receiver PCM as needed and discards stale playback queues after interruptions.
+Manual frequency, zoom, mode, and Apply tuning controls have been removed. **Stop scan** cancels retries and releases both receiver streams. **Enable audio**, volume, and mute control local playback. Audio and the oscilloscope follow the center of each automatically selected window in USB mode; this is a narrow audio channel, not the waveform of the entire RF band. Audio queues clear when the scan advances.
+
+The independent implementation is in `backend/sweep.py`. [HackRF's documented sweep behavior](https://hackrf.readthedocs.io/en/latest/hackrf_tools.html#hackrf-sweep) provided conceptual inspiration only; no HackRF code was copied or linked. This is a KiwiSDR scanner, not a HackRF hardware driver or command-line-compatible replacement. Frequency coverage and speed are limited by the configured receiver. Power values are receiver-relative and are not calibrated dBm. A pass measures its windows sequentially, not simultaneously.
+
+The browser connects only to `wss://<SpectralKey host>/ws/receiver`. Python maintains paired audio and spectrum-data connections to the configured receiver. Completed sweep bins, scan progress, mono PCM, and selected numeric metadata reach the browser. Receiver addresses and raw configuration messages are not served. Browser-originated manual tuning commands are rejected.
+
+Reconnect delays grow exponentially from 1 second to a maximum of 30 seconds, with jitter. Completed sweep traffic spanning ten seconds resets the backoff. Busy, interrupted, and stalled sessions retry; receiver access refusals and session limits stop retries. Incomplete sweeps are discarded on reconnect. A scan window that cannot complete within 25 seconds causes a retry. The bridge supports one active browser receiver session at a time.
 
 ## Backend configuration
 
-- `SPECTRALKEY_RECEIVER`: backend-only HTTP or HTTPS KiwiSDR endpoint, including its actual WebSocket port. The bridge is not an arbitrary URL proxy and accepts only tuning commands from the page.
+- `SPECTRALKEY_RECEIVER`: backend-only HTTP or HTTPS KiwiSDR endpoint, including its actual WebSocket port. The bridge is not an arbitrary URL proxy; tuning is controlled by the automatic scan engine.
 - `SPECTRALKEY_TLS_CERT` / `SPECTRALKEY_TLS_KEY`: PEM certificate and key for HTTPS. Defaults to the generated `.tls/localhost.pem` and `.tls/localhost-key.pem`.
 - `SPECTRALKEY_ORIGIN`: exact authorized HTTPS browser origin when different from the request host.
 
@@ -39,15 +45,16 @@ The server binds to loopback. For remote deployment, use an appropriate hostname
 
 ```powershell
 node tests/test-receiver.cjs
+.venv\Scripts\python.exe tests/test_sweep.py
 .venv\Scripts\python.exe tests/test_bridge.py
 .venv\Scripts\python.exe tests/test_bridge.py --live
 ```
 
-Local tests cover verified TLS/WSS, same-origin enforcement, static asset access, sanitized receiver metadata, PCM and FFT forwarding, upstream cleanup, exponential backoff and cancellation, sample decoding, and audio queue clearing. The live test requires a free public receiver slot.
+Local tests cover verified TLS/WSS, same-origin enforcement, static asset access, sanitized receiver metadata, PCM forwarding, full-band scan assembly, settling, stale-frame rejection, linear power averaging, upstream cleanup, exponential backoff and cancellation, sample decoding, and audio queue clearing. The live test requires a free public receiver slot.
 
 ## Third-party code
 
-The unmodified renderer and colormaps from [jledet/waterfall](https://github.com/jledet/waterfall) are vendored with their MIT license. Receiver protocol reference: [kiwiclient](https://github.com/jks-prv/kiwiclient). HTTPS and WebSockets use aiohttp; certificate generation uses cryptography. Observation logging remains disabled.
+Receiver protocol reference: [kiwiclient](https://github.com/jks-prv/kiwiclient). HTTPS and WebSockets use aiohttp; certificate generation uses cryptography. Observation logging remains disabled.
 
 ## File structure
 
@@ -55,13 +62,14 @@ The unmodified renderer and colormaps from [jledet/waterfall](https://github.com
 SpectralKey/
   Launch SpectralKey.cmd     Double-click launcher
   backend/server.py         HTTPS server and receiver bridge
+  backend/sweep.py          Independent automatic scan and power-bin assembly
   frontend/
     index.html              Page layout
     css/style.css           Styles
     js/                     Receiver client and WebAudio playback
     assets/fonts/           Web fonts
     assets/images/          Logo and icon
-    vendor/waterfall/        Upstream renderer and MIT license
+    vendor/oscilloscope/     Audio waveform renderer and MIT license
   scripts/                  Launch and certificate setup helpers
   tests/                    Python integration and JavaScript client checks
   database/schema.sql       Existing SQL placeholder
@@ -75,6 +83,6 @@ The existing observation data is preserved in `data/`; the current bridge does n
 
 ## Licenses page
 
-The receiver footer links to `frontend/licenses.html`. The page includes the waterfall MIT notice, installed backend dependency licenses, and font/artwork credits. Bundled license text lives in `frontend/licenses/`. After changing Python dependencies, rebuild it with `.venv\Scripts\python.exe scripts/build_licenses.py`.
+The receiver footer links to `frontend/licenses.html`. The page includes the oscilloscope MIT notice, installed backend dependency licenses, and font/artwork credits. Bundled license text lives in `frontend/licenses/`. After changing Python dependencies, rebuild it with `.venv\Scripts\python.exe scripts/build_licenses.py`.
 
-Keep the receiver canvas (`id="waterfall"`) and its scripts in `frontend/index.html`; the credit text can be edited independently on the licenses page.
+Keep the audio canvas (`id="oscilloscope"`) and its scripts in `frontend/index.html`; the credit text can be edited independently on the licenses page.

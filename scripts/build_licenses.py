@@ -17,7 +17,7 @@ def notice(name, source):
     return f'<a href="licenses/{escape(name)}">{escape(name)}</a>'
 
 
-waterfall = (FRONTEND / 'vendor/waterfall/LICENSE').read_text(encoding='utf-8')
+oscilloscope = (FRONTEND / 'vendor/oscilloscope/LICENSE').read_text(encoding='utf-8')
 rows = []
 for package in sorted(distributions(), key=lambda item: item.metadata['Name'].lower()):
     name = package.metadata['Name']
@@ -49,10 +49,10 @@ page = f'''<!doctype html>
 <header><h1>Licenses &amp; credits</h1><a class="btn" href="/">Back to receiver</a></header>
 <main class="licenses-page">
   <p>Third-party software and assets used by SpectralKey. These notices describe the included components; they do not set a license for SpectralKey itself.</p>
-  <section class="panel license-card" aria-labelledby="waterfall-license">
-    <h2 id="waterfall-license">Waterfall renderer</h2>
-    <p><a href="https://github.com/jledet/waterfall">jledet/waterfall</a> by Jeppe Ledet-Pedersen provides the spectrum and waterfall canvas renderer and colormaps. The vendored files use the MIT license.</p>
-    <details open><summary>Full MIT license</summary><pre class="license-text">{escape(waterfall)}</pre></details>
+  <section class="panel license-card" aria-labelledby="oscilloscope-license">
+    <h2 id="oscilloscope-license">Audio oscilloscope</h2>
+    <p><a href="https://github.com/mathiasvr/audio-oscilloscope">mathiasvr/audio-oscilloscope</a> 1.3.0 by Mathias Rasmussen provides the audio waveform renderer. The MIT-licensed source is vendored with its ES module export removed for classic browser scripts. SpectralKey adds the grid, glow, and trace colors.</p>
+    <details><summary>Full MIT license</summary><pre class="license-text">{escape(oscilloscope)}</pre></details>
   </section>
   <section class="panel license-card" aria-labelledby="backend-licenses">
     <h2 id="backend-licenses">Python backend and dependencies</h2>

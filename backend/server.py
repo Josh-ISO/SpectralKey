@@ -1,6 +1,5 @@
 """HTTPS site and same-origin WSS bridge for SpectralKey."""
 import asyncio
-import json
 import math
 import os
 import secrets
@@ -10,6 +9,7 @@ from contextlib import AsyncExitStack
 from pathlib import Path
 from urllib.parse import urlsplit
 from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
+from sweep import Sweep
 
 PROJECT = Path(__file__).resolve().parent.parent
 ROOT = PROJECT / 'frontend'
@@ -17,10 +17,10 @@ ROOT = PROJECT / 'frontend'
 UPSTREAM = os.getenv('SPECTRALKEY_RECEIVER', 'http://sdr.gb0snb.com:8073')
 FILES = {
     '/licenses.html': 'licenses.html',
+    '/js/display.js': 'js/display.js',
+    '/vendor/oscilloscope/oscilloscope.js': 'vendor/oscilloscope/oscilloscope.js',
     '/': 'index.html', '/index.html': 'index.html',
     '/css/style.css': 'css/style.css', '/js/receiver.js': 'js/receiver.js', '/js/audio.js': 'js/audio.js',
-    '/vendor/waterfall/spectrum.js': 'vendor/waterfall/spectrum.js',
-    '/vendor/waterfall/colormap.js': 'vendor/waterfall/colormap.js',
     '/assets/images/spectralkey-logo.png': 'assets/images/spectralkey-logo.png',
     '/assets/fonts/Rem-Blick.ttf': 'assets/fonts/Rem-Blick.ttf',
     '/assets/fonts/Unitblock-JpJma.ttf': 'assets/fonts/Unitblock-JpJma.ttf',
@@ -30,24 +30,10 @@ FILES = {
 for notice in (ROOT / 'licenses').glob('*.txt'):
     FILES['/licenses/' + notice.name] = 'licenses/' + notice.name
 
-MODES = {'am': (-4900, 4900), 'usb': (300, 2700), 'lsb': (-2700, -300), 'cw': (300, 700)}
-
-
 class ReceiverError(Exception):
     def __init__(self, message, retry=True):
         self.retry = retry
         super().__init__(message)
-
-
-def validate_tuning(data):
-    if not isinstance(data, dict) or data.get('type') != 'tune':
-        raise ValueError('Unsupported command')
-    frequency = float(data['frequency'])
-    zoom = int(data['zoom'])
-    mode = data['mode']
-    if not math.isfinite(frequency) or not 0 <= frequency <= 32000 or not 0 <= zoom <= 14 or mode not in MODES:
-        raise ValueError('Invalid tuning')
-    return frequency, zoom, mode
 
 
 class Bridge:
@@ -55,20 +41,27 @@ class Bridge:
         self.browser, self.upstream = browser, upstream
         self.streams = {}
         self.ready = set()
-        self.frequency, self.zoom, self.mode = 7100, 5, 'usb'
+        self.sweep = None
+        self.bandwidth_known = False
+        self.last_step = 0
         self.bandwidth, self.offset = 30000000, 0
-        self.last_waterfall = self.last_audio = 0
+        self.last_spectrum = self.last_audio = 0
 
     async def notify(self, **data):
         await asyncio.wait_for(self.browser.send_json(data), 10)
 
-    async def tune(self):
-        frequency = max(0, min(self.bandwidth / 1000, self.frequency - self.offset / 1000))
-        if 'SND' in self.ready:
-            low, high = MODES[self.mode]
-            await self.streams['SND'].send_str(f'SET mod={self.mode} low_cut={low} high_cut={high} freq={frequency:.3f}')
-        if 'W/F' in self.ready:
-            await self.streams['W/F'].send_str(f'SET zoom={self.zoom} cf={frequency:.3f}')
+    async def ensure_sweep(self):
+        if self.sweep is None and self.bandwidth_known and self.ready == {'SND', 'W/F'}:
+            self.sweep = Sweep(self.bandwidth, self.offset)
+            await self.advance()
+
+    async def advance(self):
+        self.last_step = asyncio.get_running_loop().time()
+        await self.notify(**self.sweep.progress())
+        # Demodulated audio follows the center of each automatic scan window.
+        frequency = (self.sweep.index + .5) * self.sweep.span / 1000
+        await self.streams['SND'].send_str(f'SET mod=usb low_cut=300 high_cut=2700 freq={frequency:.3f}')
+        await self.streams['W/F'].send_str(f'SET zoom={self.sweep.zoom} cf={frequency:.3f}')
 
     async def metadata(self, kind, payload):
         ws = self.streams[kind]
@@ -83,9 +76,14 @@ class Bridge:
             if key == 'down':
                 raise ReceiverError('Receiver is temporarily unavailable.')
             if key == 'bandwidth' and 0 < float(value) <= 64000000:
+                if self.bandwidth != float(value):
+                    self.sweep = None
                 self.bandwidth = float(value)
+                self.bandwidth_known = True
                 await self.notify(type='receiver', bandwidth=self.bandwidth, offset=self.offset)
             if key == 'freq_offset' and math.isfinite(float(value)):
+                if self.offset != float(value) * 1000:
+                    self.sweep = None
                 self.offset = float(value) * 1000
                 await self.notify(type='receiver', bandwidth=self.bandwidth, offset=self.offset)
             if key == 'audio_rate' and kind == 'SND':
@@ -101,13 +99,12 @@ class Bridge:
                                     'SET genattn=0', 'SET gen=0 mix=-1',
                                     'SET agc=1 hang=0 thresh=-100 slope=6 decay=1000 manGain=50'):
                         await ws.send_str(command)
-                    await self.tune()
             if key == 'wf_setup' and kind == 'W/F' and kind not in self.ready:
                 self.ready.add(kind)
                 for command in ('SET wf_comp=0', 'SET maxdb=-10 mindb=-110', 'SET interp=13'):
                     await ws.send_str(command)
-                await self.tune()
                 await ws.send_str('SET wf_speed=2')
+        await self.ensure_sweep()
 
     async def pump(self, kind):
         async for message in self.streams[kind]:
@@ -117,8 +114,13 @@ class Bridge:
             if data[:3] == b'MSG':
                 await self.metadata(kind, data[4:].decode('utf-8', errors='replace'))
             elif data[:3] == b'W/F' and len(data) == 1040:
-                self.last_waterfall = asyncio.get_running_loop().time()
-                await asyncio.wait_for(self.browser.send_bytes(data), 10)
+                self.last_spectrum = asyncio.get_running_loop().time()
+                if self.sweep is not None:
+                    advanced, result = self.sweep.accept(data)
+                    if result:
+                        await self.notify(**result)
+                    if advanced:
+                        await self.advance()
             elif data[:3] == b'SND' and len(data) > 10 and not data[3] & 0x18:
                 # Plain mono PCM only; ignore compressed startup packets and stereo/IQ.
                 self.last_audio = asyncio.get_running_loop().time()
@@ -129,12 +131,9 @@ class Bridge:
         async for message in self.browser:
             if message.type != WSMsgType.TEXT:
                 continue
-            try:
-                self.frequency, self.zoom, self.mode = validate_tuning(json.loads(message.data))
-                await self.tune()
-            except (ValueError, TypeError, KeyError, OverflowError):
-                await self.notify(type='error', message='Invalid tuning settings.', retry=False)
-                return
+            # Scanning is automatic; browser clients cannot retune the receiver.
+            await self.notify(type='error', message='Manual tuning is unavailable during automatic scanning.', retry=False)
+            return
 
     async def heartbeat(self):
         while True:
@@ -142,7 +141,7 @@ class Bridge:
             for ws in self.streams.values():
                 await ws.send_str('SET keepalive')
             now = asyncio.get_running_loop().time()
-            if now - min(self.last_waterfall, self.last_audio) > 25:
+            if now - min(self.last_spectrum, self.last_audio, self.last_step) > 25:
                 raise ReceiverError('Receiver stream stalled.')
 
     async def run(self):
@@ -159,7 +158,7 @@ class Bridge:
                 self.streams[kind] = ws
                 await ws.send_str('SET auth t=kiwi p=')
                 await ws.send_str('SET ident_user=SpectralKey')
-            self.last_waterfall = self.last_audio = asyncio.get_running_loop().time()
+            self.last_step = self.last_spectrum = self.last_audio = asyncio.get_running_loop().time()
             tasks = [asyncio.create_task(self.pump(kind)) for kind in self.streams]
             tasks += [asyncio.create_task(self.commands()), asyncio.create_task(self.heartbeat())]
             try:

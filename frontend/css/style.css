@@ -238,9 +238,8 @@ dialog::backdrop {
 .receiver-status { color: var(--text); }
 .receiver-note { color: var(--muted); font: .8rem/1.5 system-ui, sans-serif; }
 .receiver-note a { color: #70b6ff; }
-#waterfall { display: block; width: 100%; height: 440px; background: #000; }
 .btn:disabled { opacity: .5; cursor: default; }
-@media (max-width: 520px) { #waterfall { height: 320px; } .receiver-address { flex-basis: 100%; } }
+@media (max-width: 520px) { .receiver-address { flex-basis: 100%; } }
 
 /* Footer and third-party notices. */
 .site-footer { display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; padding: 24px; border-top: 1px solid var(--line); }
@@ -250,3 +249,16 @@ dialog::backdrop {
 .license-card h2 { margin-top: 0; }
 .license-text { white-space: pre-wrap; overflow-wrap: anywhere; font: .85rem/1.6 ui-monospace, monospace; }
 .license-card summary { cursor: pointer; }
+
+/* Display picker and phosphor-style audio oscilloscope. */
+[hidden] { display: none !important; }
+.display-picker { padding-bottom: 0; }
+.display-picker select { min-width: 220px; padding: 9px 12px; border: 1px solid var(--muted); border-radius: 7px; background: var(--bg); color: var(--text); }
+#receiver-visualization { border: 1px solid #344042; border-radius: 10px; overflow: hidden; }
+#scope-screen { position: relative; height: 440px; background-color: #000; background-image: linear-gradient(#ffffff12 1px, transparent 1px), linear-gradient(90deg, #ffffff12 1px, transparent 1px); background-size: 10% 12.5%, 10% 12.5%; }
+#scope-screen::before, #scope-screen::after { content: ''; position: absolute; pointer-events: none; background: #ffffff25; }
+#scope-screen::before { left: 0; right: 0; top: 50%; height: 1px; }
+#scope-screen::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+#oscilloscope { display: block; width: 100%; height: 100%; }
+.scope-label { position: absolute; top: 16px; left: 18px; color: #a0a0a0; font: .75rem/1.4 ui-monospace, monospace; letter-spacing: .15em; pointer-events: none; }
+@media (max-width: 520px) { #scope-screen { height: 320px; } }
