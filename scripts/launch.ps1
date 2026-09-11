@@ -13,7 +13,16 @@ if (-not $chrome) {
 }
 if (-not $chrome) { throw 'Google Chrome was not found. Install Chrome to use this launcher.' }
 if (-not (Test-Path -LiteralPath $runtime)) {
-    throw 'Run python -m venv .venv, then .venv\Scripts\python.exe -m pip install -r requirements.txt in this folder.'
+    throw 'Run python -m venv .venv, then .venv\Scripts\python.exe -m pip install -r requirements.txt in this #folder.'
+}
+# A virtual environment can exist before its dependencies have been installed.
+& $runtime -c "import importlib.util, sys; sys.exit(0 if all(importlib.util.find_spec(name) for name in ('aiohttp', 'cryptography')) else 1)"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host 'Installing SpectralKey Python dependencies...'
+    & $runtime -m pip install -r (Join-Path $projectRoot 'requirements.txt')
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Could not install dependencies. Check your internet connection and run .venv\Scripts\python.exe -m pip install -r requirements.txt from the project folder.'
+    }
 }
 if (-not $env:SPECTRALKEY_TLS_CERT) {
     & $runtime (Join-Path $PSScriptRoot 'setup_tls.py')

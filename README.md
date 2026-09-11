@@ -17,7 +17,7 @@ python -m venv .venv
 
 On Windows, run `./scripts/trust-local-certificate.ps1` once to trust the generated localhost-only server certificate in your current user's certificate store. This is an explicit trust change, not a browser-warning bypass. The certificate is not a certificate authority, only covers localhost/loopback addresses, and expires after 90 days. Its private key stays in the Git-ignored `.tls` directory. To revoke trust, remove the matching **SpectralKey localhost** certificate from the current user's Trusted Root Certification Authorities store. For renewal, stop the server, remove that trust entry and the `.tls` files, then generate and trust a new certificate.
 
-Double-click **Launch SpectralKey.cmd** and open **https://localhost:8765**. Stop any previous HTTP server first. Use Ctrl+C in the launcher to stop the app. The launcher checks certificate trust rather than silently changing it.
+Double-click **Launch SpectralKey.cmd** to open **https://localhost:8765** automatically. The launcher installs missing Python dependencies into `.venv` before checking the localhost certificate; this requires internet access when dependencies are missing. Stop any previous HTTP server first. Use Ctrl+C in the launcher to stop the app. The launcher checks certificate trust rather than silently changing it.
 
 ## Receiver and audio
 
